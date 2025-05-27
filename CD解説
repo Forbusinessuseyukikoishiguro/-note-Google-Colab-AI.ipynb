@@ -1,0 +1,383 @@
+# 🎓 Google Colab シンプル版 - 小学生プログラミングスクールAI
+# UI問題を解決した確実動作版
+
+# プログラム開始時のタイトル表示
+print("🚀 小学生向けプログラミングスクールAI（シンプル版）")
+# 区切り線を表示（=を50回繰り返し）
+print("=" * 50)
+
+# ===== 1. 自動インストール =====
+# 外部コマンド実行用のモジュールをインポート
+import subprocess
+# Pythonシステム情報取得用のモジュールをインポート
+import sys
+
+def install_packages():
+    """必要パッケージの自動インストール"""
+    # エラーが発生してもプログラムを継続するためのtry-except文
+    try:
+        # pipコマンドでopenaiライブラリをインストール
+        # sys.executable: 現在のPythonインタープリターのパス
+        # -m: モジュールとして実行
+        # -q: quiet（インストール過程を非表示）
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "openai", "-q"])
+        # インストール成功メッセージを表示
+        print("✅ OpenAIライブラリ インストール完了")
+    # インストールに失敗した場合の処理
+    except:
+        # スキップメッセージを表示（エラーでプログラムを停止しない）
+        print("⚠️ インストールをスキップ")
+
+# 定義した関数を実行してパッケージをインストール
+install_packages()
+
+# ===== 2. ライブラリインポート =====
+# 必要なライブラリをインポート（エラーハンドリング付き）
+try:
+    # OpenAI APIクライアント用のクラスをインポート
+    from openai import OpenAI
+    # Google Colab の秘密鍵機能用のモジュールをインポート
+    from google.colab import userdata
+    # インポート成功メッセージを表示
+    print("✅ ライブラリ読み込み完了")
+# インポートエラーが発生した場合の処理
+except ImportError as e:
+    # エラー内容を含むメッセージを表示（f-stringで変数埋め込み）
+    print(f"❌ インポートエラー: {e}")
+
+# ===== 3. シンプルAIクラス =====
+class SimpleProgrammingAI:
+    """シンプル版プログラミングスクールAI"""
+    
+    # クラスのコンストラクタ（インスタンス作成時に自動実行）
+    def __init__(self):
+        # OpenAIクライアントを格納する変数を初期化
+        self.client = None
+        
+        # 学年選択肢を辞書で定義（キー：選択番号、値：説明文）
+        self.grades = {
+            "1": "小学校低学年（6-8歳）",
+            "2": "小学校中学年（9-10歳）", 
+            "3": "小学校高学年（11-12歳）"
+        }
+        
+        # 学習テーマ選択肢を辞書で定義
+        self.themes = {
+            "1": "Scratch基礎",
+            "2": "ゲーム作り",
+            "3": "ロボット制御",
+            "4": "Webサイト作成",
+            "5": "アニメーション",
+            "6": "音楽プログラミング"
+        }
+        
+        # 機能選択肢を辞書で定義
+        self.functions = {
+            "1": "📚 カリキュラム作成",
+            "2": "💡 授業アイディア（5個）",
+            "3": "🚀 プロジェクト提案（3個）"
+        }
+
+    # OpenAI APIの設定を行うメソッド
+    def setup_api(self):
+        """API設定"""
+        # API設定中にエラーが発生してもプログラムを継続
+        try:
+            # Google ColabのSecretsからAPIキーを取得
+            api_key = userdata.get('OPENAI_API_KEY')
+            # APIキーを使ってOpenAIクライアントを作成
+            self.client = OpenAI(api_key=api_key)
+            
+            # 接続テスト：最小限のリクエストでAPI接続を確認
+            self.client.chat.completions.create(
+                model="gpt-3.5-turbo",           # 使用するAIモデル
+                messages=[{"role": "user", "content": "Hello"}],  # テスト用メッセージ
+                max_tokens=1                     # 生成トークン数を最小に設定
+            )
+            # 接続成功メッセージを表示
+            print("✅ OpenAI API接続完了")
+            # 成功を示すTrueを返す
+            return True
+        # API設定でエラーが発生した場合の処理
+        except Exception as e:
+            # エラー内容を含むメッセージを表示
+            print(f"❌ API設定エラー: {e}")
+            # 失敗を示すFalseを返す
+            return False
+
+    # メニューを画面に表示するメソッド
+    def show_menu(self, title, options):
+        """メニュー表示"""
+        # 空行とタイトルを表示（\nは改行）
+        print(f"\n📋 {title}")
+        # 区切り線を表示（-を30回繰り返し）
+        print("-" * 30)
+        # 辞書の各項目をループで表示
+        for key, value in options.items():
+            # 番号と選択肢を表示
+            print(f"{key}. {value}")
+        # 下部の区切り線を表示
+        print("-" * 30)
+
+    # ユーザーからの選択入力を取得するメソッド
+    def get_choice(self, options, message="選択してください"):
+        """選択入力"""
+        # 有効な入力があるまで無限ループ
+        while True:
+            # ユーザーに入力を求める（strip()で前後の空白を削除）
+            choice = input(f"{message} (番号入力): ").strip()
+            # 入力値が選択肢に存在するかチェック
+            if choice in options:
+                # 有効な選択の場合、値を返してメソッド終了
+                return choice
+            # 無効な入力の場合、エラーメッセージを表示してループ継続
+            print("❌ 無効な選択です。もう一度入力してください。")
+
+    # AIにコンテンツ生成を依頼するメソッド
+    def generate_content(self, prompt):
+        """AI生成"""
+        # API呼び出し中のエラーハンドリング
+        try:
+            # 生成中であることをユーザーに通知
+            print("🤖 AI生成中... 少々お待ちください")
+            # OpenAI APIにリクエストを送信
+            response = self.client.chat.completions.create(
+                model="gpt-3.5-turbo",           # 使用するAIモデル
+                messages=[{"role": "user", "content": prompt}],  # ユーザーからの質問
+                temperature=0.7,                 # 生成の創造性（0.0-1.0）
+                max_tokens=1500                  # 生成する最大トークン数
+            )
+            # レスポンスから生成されたテキストを抽出して返す
+            return response.choices[0].message.content
+        # API呼び出しでエラーが発生した場合
+        except Exception as e:
+            # エラーメッセージを文字列として返す
+            return f"❌ エラー: {str(e)}"
+
+    # カリキュラム作成用のプロンプトを生成してAIに送信
+    def create_curriculum(self, grade, theme):
+        """カリキュラム作成"""
+        # AIに送信するプロンプト（指示文）を作成
+        prompt = f"""
+{grade}向けの{theme}の4週間カリキュラムを作成してください。
+
+以下の構成で作成：
+1. カリキュラム概要
+2. 学習目標（3つ）
+3. 週別学習内容
+   - 第1週：基礎学習
+   - 第2週：応用学習  
+   - 第3週：実践学習
+   - 第4週：発表・まとめ
+4. 各週の詳細な活動内容
+5. 評価方法
+
+小学生が楽しく学べる内容で、実際に授業で使える形式で作成してください。
+        """
+        # 作成したプロンプトをAI生成メソッドに渡して結果を返す
+        return self.generate_content(prompt)
+
+    # 授業アイディア作成用のプロンプトを生成してAIに送信
+    def create_ideas(self, grade, theme):
+        """授業アイディア作成"""
+        # AIに送信するプロンプト（指示文）を作成
+        prompt = f"""
+{grade}向けの{theme}の授業アイディアを5つ提案してください。
+
+各アイディアについて以下を含める：
+1. アイディア名
+2. 授業時間（45分想定）
+3. 学習目標
+4. 必要な準備
+5. 授業の流れ（導入・展開・まとめ）
+6. 子どもたちが楽しめるポイント
+
+創造的で実践的な授業アイディアを提案してください。
+        """
+        # 作成したプロンプトをAI生成メソッドに渡して結果を返す
+        return self.generate_content(prompt)
+
+    # プロジェクト提案作成用のプロンプトを生成してAIに送信
+    def create_projects(self, grade, theme):
+        """プロジェクト提案作成"""
+        # AIに送信するプロンプト（指示文）を作成
+        prompt = f"""
+{grade}向けの{theme}を使った実践プロジェクトを3つ提案してください。
+
+各プロジェクトについて以下を含める：
+1. プロジェクト名
+2. 完成までの時間
+3. 学習効果
+4. 必要なツール・材料
+5. 制作手順（ステップ別）
+6. 発表・共有方法
+7. 難易度レベル
+
+子どもたちが達成感を得られる魅力的なプロジェクトを提案してください。
+        """
+        # 作成したプロンプトをAI生成メソッドに渡して結果を返す
+        return self.generate_content(prompt)
+
+    # AI生成結果を見やすい形式で表示するメソッド
+    def show_result(self, title, content):
+        """結果表示"""
+        # 空行と完了メッセージを表示
+        print(f"\n🎉 {title} 作成完了！")
+        # 上部の区切り線（=を60回繰り返し）
+        print("=" * 60)
+        # AI生成されたコンテンツを表示
+        print(content)
+        # 下部の区切り線
+        print("=" * 60)
+        # ユーザー向けの案内メッセージ
+        print("✅ 上記の内容をコピーしてご利用ください")
+
+    # アプリケーションのメインループを実行するメソッド
+    def start(self):
+        """メインループ"""
+        # アプリケーションタイトルを表示
+        print("\n🎓 小学生向けプログラミングスクールAI")
+        # 区切り線を表示
+        print("=" * 40)
+        
+        # API設定を試行し、失敗した場合は設定方法を表示して終了
+        if not self.setup_api():
+            # API設定方法の説明を表示
+            print("\n🔑 APIキー設定方法:")
+            print("1. 左サイドバーの🔑（Secrets）をクリック")
+            print("2. 'New secret'をクリック")
+            print("3. Name: OPENAI_API_KEY")
+            print("4. Value: あなたのOpenAI APIキー")
+            print("5. 'Notebook access'をONにする")
+            print("6. このセルを再実行")
+            # メソッドを終了（return文でループに入らない）
+            return
+
+        # メインの処理ループ（ユーザーがnを入力するまで継続）
+        while True:
+            # 学年選択のメニューを表示
+            self.show_menu("対象学年を選択", self.grades)
+            # ユーザーから学年の選択を取得
+            grade_choice = self.get_choice(self.grades, "学年を選択")
+            # 選択番号に対応する学年名を取得
+            selected_grade = self.grades[grade_choice]
+            
+            # テーマ選択のメニューを表示
+            self.show_menu("学習テーマを選択", self.themes)
+            # ユーザーからテーマの選択を取得
+            theme_choice = self.get_choice(self.themes, "テーマを選択")
+            # 選択番号に対応するテーマ名を取得
+            selected_theme = self.themes[theme_choice]
+            
+            # 機能選択のメニューを表示
+            self.show_menu("作成する教材を選択", self.functions)
+            # ユーザーから機能の選択を取得
+            func_choice = self.get_choice(self.functions, "機能を選択")
+            
+            # ユーザーの選択内容を確認表示
+            print(f"\n📝 設定確認:")
+            print(f"学年: {selected_grade}")
+            print(f"テーマ: {selected_theme}")
+            print(f"機能: {self.functions[func_choice]}")
+            
+            # 選択された機能に応じてAI生成を実行
+            if func_choice == "1":
+                # カリキュラム作成を実行
+                result = self.create_curriculum(selected_grade, selected_theme)
+                # 結果を表示
+                self.show_result("📚 カリキュラム", result)
+            elif func_choice == "2":
+                # 授業アイディア作成を実行
+                result = self.create_ideas(selected_grade, selected_theme)
+                # 結果を表示
+                self.show_result("💡 授業アイディア", result)
+            elif func_choice == "3":
+                # プロジェクト提案作成を実行
+                result = self.create_projects(selected_grade, selected_theme)
+                # 結果を表示
+                self.show_result("🚀 プロジェクト提案", result)
+            
+            # 継続確認の区切り線を表示
+            print("\n" + "="*40)
+            # ユーザーに継続意思を確認（入力を小文字に変換）
+            continue_choice = input("別の教材を作成しますか？ (y/n): ").strip().lower()
+            # 'y'以外が入力された場合はループを終了
+            if continue_choice != 'y':
+                # 終了メッセージを表示
+                print("👋 ご利用ありがとうございました！")
+                # ループを抜けてメソッド終了
+                break
+
+# ===== 4. 簡単起動関数 =====
+def start_ai():
+    """AI起動（シンプル版）"""
+    # SimpleProgrammingAIクラスのインスタンスを作成
+    app = SimpleProgrammingAI()
+    # アプリケーションのメインループを開始
+    app.start()
+
+def quick_demo():
+    """クイックデモ"""
+    # デモタイトルを表示
+    print("🎯 クイックデモ")
+    # 区切り線を表示
+    print("=" * 30)
+    # ツールの機能説明を表示
+    print("このツールでできること:")
+    print("📚 4週間カリキュラム自動生成")
+    print("💡 5つの授業アイディア提案") 
+    print("🚀 3つのプロジェクト提案")
+    # 空行を表示
+    print()
+    # 対応範囲の説明
+    print("対応学年: 低学年〜高学年")
+    print("テーマ: Scratch、ゲーム、ロボット等6種類")
+    # 空行を表示
+    print()
+    # 開始方法の案内
+    print("🚀 start_ai() で開始！")
+
+def help_setup():
+    """セットアップヘルプ"""
+    # セットアップ方法のタイトルを表示
+    print("🔧 セットアップ方法")
+    # 区切り線を表示
+    print("=" * 30)
+    # OpenAI APIキー取得方法の説明
+    print("1. OpenAI APIキーを取得")
+    print("   - https://platform.openai.com/")
+    print("   - アカウント登録・ログイン")
+    print("   - API Keys セクションでキー生成")
+    # 空行を表示
+    print()
+    # Google Colab設定方法の説明
+    print("2. Google Colab Secretsに設定")
+    print("   - 左サイドバー🔑クリック")
+    print("   - 'New secret'クリック")
+    print("   - Name: OPENAI_API_KEY")  
+    print("   - Value: あなたのAPIキー")
+    print("   - 'Notebook access' ON")
+    # 空行を表示
+    print()
+    # 開始方法の案内
+    print("3. start_ai() で開始")
+
+# ===== 5. 使用方法案内 =====
+# 使用方法のタイトルを表示
+print("\n🎯 使用方法（シンプル版）")
+# 区切り線を表示
+print("=" * 25)
+# 各機能の説明を表示
+print("quick_demo()   # デモ・機能紹介")
+print("help_setup()   # セットアップ方法")
+print("start_ai()     # AI起動")
+# 区切り線を表示
+print("=" * 25)
+# 改善点の説明を表示
+print("\n💡 改善点:")
+print("✅ UIボタン → シンプルな数字入力")
+print("✅ 複雑な表示 → 基本的なprint出力")
+print("✅ ipywidgets不要 → 標準ライブラリのみ")
+print("✅ 確実動作 → エラー対策強化")
+# 開始の案内を表示
+print("\n🚀 今すぐ start_ai() で開始しましょう！")
